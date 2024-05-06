@@ -4,9 +4,9 @@
   <groupId>org.purely</groupId>
   <artifactId>purely-java</artifactId>
   <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.0.1</version>
   <name>purely-java</name>
-  <url>http://maven.apache.org</url>
+  <url>github.com/rmullin7286/purely-java</url>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
