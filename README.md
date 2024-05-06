@@ -1,5 +1,7 @@
 # purely-java
 
+Note that this is an unreleased library and has not been deployed to Maven yet.
+
 Pure functional programming concepts and collections translated to Java 21, with a focus on ease of use and
 easy integration with existing standard Java APIs.
 
