@@ -1,5 +1,6 @@
 package org.purely.control;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -83,6 +84,7 @@ public sealed interface Either<L, R> {
      * current value is a {@link Right}
      */
     default <L2> Either<L2, R> mapLeft(Function<? super L, ? extends L2> mapper) {
+        Objects.requireNonNull(mapper);
         return switch (this) {
             case Left(L v) -> new Left<>(mapper.apply(v));
             case Right<L, R> r -> r.coerce();
@@ -99,6 +101,7 @@ public sealed interface Either<L, R> {
      * current value is a {@link Left}
      */
     default <R2> Either<L, R2> mapRight(Function<? super R, ? extends R2> mapper) {
+        Objects.requireNonNull(mapper);
         return switch (this) {
             case Left<L, R> l -> l.coerce();
             case Right(R val) -> new Right<>(mapper.apply(val));
@@ -118,6 +121,8 @@ public sealed interface Either<L, R> {
      */
     default <L2, R2> Either<L2, R2> mapEither(Function<? super L, ? extends L2> leftMapper,
                                               Function<? super R, ? extends R2> rightMapper) {
+        Objects.requireNonNull(leftMapper);
+        Objects.requireNonNull(rightMapper);
         return switch (this) {
             case Left(L v) -> new Left<>(leftMapper.apply(v));
             case Right(R v) -> new Right<>(rightMapper.apply(v));
@@ -133,11 +138,9 @@ public sealed interface Either<L, R> {
      * @return A new Either of the mapper applied to the {@link Left}'s value, or the same {@link Right}.
      */
     default <L2> Either<L2, R> flatMapLeft(Function<? super L, ? extends Either<? extends L2, ? extends R>> mapper) {
+        Objects.requireNonNull(mapper);
         return switch (this) {
-            case Left(L v) -> {
-                @SuppressWarnings("unchecked") final var ret = (Left<L2, R>) mapper.apply(v);
-                yield ret;
-            }
+            case Left(L v) -> Internal.narrow(mapper.apply(v));
             case Right<L, R> r -> r.coerce();
         };
     }
@@ -151,12 +154,18 @@ public sealed interface Either<L, R> {
      * @return A new Either of the mapper applied to the {@link Right}'s value, or the same {@link Left}.
      */
     default <R2> Either<L, R2> flatMapRight(Function<? super R, ? extends Either<? extends L, ? extends R2>> mapper) {
+        Objects.requireNonNull(mapper);
         return switch (this) {
             case Left<L, R> l -> l.coerce();
-            case Right(R val) -> {
-                @SuppressWarnings("unchecked") final var ret = (Right<L, R2>) mapper.apply(val);
-                yield ret;
-            }
+            case Right(R val) -> Internal.narrow(mapper.apply(val));
+        };
+    }
+
+    default <L2, R2> Either<L2, R2> flatMapEither(Function<? super L, ? extends Either<? extends L2, ? extends R2>> leftMapper,
+                                                  Function<? super R, ? extends Either<? extends L2, ? extends R2>> rightMapper) {
+        return switch (this) {
+            case Left(L v) -> Internal.narrow(leftMapper.apply(v));
+            case Right(R v) -> Internal.narrow(rightMapper.apply(v));
         };
     }
 
@@ -261,5 +270,12 @@ public sealed interface Either<L, R> {
         private <L2> Either<L2, R> coerce() {
             return (Either<L2, R>) this;
         }
+    }
+}
+
+interface Internal {
+    @SuppressWarnings("unchecked")
+    static <L, R> Either<L, R> narrow(Either<? extends L, ? extends R> either) {
+        return (Either<L, R>)either;
     }
 }

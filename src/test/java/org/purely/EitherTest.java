@@ -139,4 +139,16 @@ class EitherTest {
         new Left<>(1).ifRight(__ -> fail("ifRight should never be called on a Left"));
         assertTrue(flag.get());
     }
+
+    @Test
+    void flatMapEither() {
+        assertEquals(new Left<>(2), new Left<>(1).flatMapEither(
+                i -> new Left<>(i + 1),
+                i -> new Right<>(i + "!")
+        ));
+        assertEquals(new Right<>("foo!"), new Right<Integer, String>("foo").flatMapEither(
+                i -> new Left<>(i + 1),
+                i -> new Right<>(i + "!")
+        ));
+    }
 }
