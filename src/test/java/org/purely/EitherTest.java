@@ -1,8 +1,9 @@
 package org.purely;
 
 import org.junit.jupiter.api.Test;
-import org.purely.Either.Left;
-import org.purely.Either.Right;
+import org.purely.control.Either;
+import org.purely.control.Either.Left;
+import org.purely.control.Either.Right;
 
 import java.util.List;
 import java.util.Optional;

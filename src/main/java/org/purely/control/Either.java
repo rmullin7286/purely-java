@@ -1,4 +1,4 @@
-package org.purely;
+package org.purely.control;
 
 import java.util.Optional;
 import java.util.function.Consumer;
