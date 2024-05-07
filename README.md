@@ -236,7 +236,7 @@ code.
 
 The control package contains useful classes that can be used for control flow in an application.
 
-### The Either type
+### Either
 
 Either is a sum type that can represent one of two types of values, defined by the Left class and the Right class. This
 can be useful for adhoc representations of data where you may expect two different types of values. In many functional
@@ -270,7 +270,68 @@ Optional<Person> getPersonByName(String name) {
 }
 ```
 
-The Either class also follows closely the Api of the `Optional` class and provides chaining methods to perform operations over
+However, if your error case is a `Throwable`, it's recommended that you use `Try` instead.
+
+The Either class also follows closely the Api of the `Optional` class and provides chaining methods to perform
+operations over
 either case as a shorthand for pattern matching. The api is not biased to either the left or right case like the
 api for Scala's api, so each operation has a pair of left/right methods, such
 as `mapLeft()`, `mapRight()`, `flatMapLeft()`, and `flatMapRight()`.
+
+### Try
+
+Checked exceptions are useful in that they require the caller of a method that throws such an exception to handle the
+error case. However, checked exceptions are not without their pain points. One of these pain points of using functional 
+programming tools like Streams in Java is that the built-in lambda types don't support checked exceptions.
+
+If we think about representing our return values as Algebraic data types, the return value of any method that throws
+an exception can be thought as a sum type of the return value as well as the exception type. Enter, `Try`.
+
+Try is a control type that can be returned from a method to represent either a successful operation or an operation that
+failed with an exception. Previously when using streams we would have to write something like:
+
+```java
+class Example {
+    void example() {
+       final List<T> myList = getList();
+       try {
+           myList.stream()
+             .map(i -> {
+                 try {
+                     return operationThatThrows(i);
+                 } catch (SomeException e) {
+                     throw new RuntimeException(e);
+                 }
+             }).toList();
+       } catch( RuntimeException e ) {
+            if(e.getCause() instanceof SomeException s) {
+                throw s;
+            }
+            throw e;
+       }
+    }
+}
+```
+
+This is verbose and cumbersome, and you may want to just use traditional for loops instead. However, with `Try`, we
+can now write:
+
+```java
+class Example {
+    void example() {
+        final List<T> myList = getList();
+        final Try<List<T>> result = myList.stream()
+            .map(Try.function(i -> operationThatThrows(i)))
+            .collect(Try.collect(Collectors.toList()));
+       
+       switch (result) {
+           case Success(List<T> l) -> doSomething(l);
+           case Failure(Throwable t) -> onError(t);
+       }
+    }
+}
+```
+
+`Try.function()` wraps a function that may throw an error, and creates a new standard `Function` that returns either
+the result or the error thrown. `Try.collect` will run the collector passed in, but stop at the first failure encountered.
+If any failure is encountered, that will be returned instead of the collector's result.

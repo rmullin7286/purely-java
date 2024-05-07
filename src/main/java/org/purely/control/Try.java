@@ -38,6 +38,10 @@ public sealed interface Try<T> {
         }
     }
 
+    static <T, R> Function<T, Try<R>> function(ThrowingFunction<T, R> function) {
+        return i -> Try.of(() -> function.apply(i));
+    }
+
     default boolean isSuccess() {
         return this instanceof Success<T>;
     }
