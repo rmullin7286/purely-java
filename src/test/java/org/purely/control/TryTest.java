@@ -6,9 +6,12 @@ import org.purely.control.Either.Right;
 import org.purely.control.Try.Failure;
 import org.purely.control.Try.Success;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,16 +19,24 @@ class TryTest {
 
     @Test
     void of() {
-        assertThrows(VirtualMachineError.class, () -> Try.of(() -> { throw new OutOfMemoryError(); }));
-        assertThrows(LinkageError.class, () -> Try.of(() -> { throw new LinkageError(); }));
+        assertThrows(VirtualMachineError.class, () -> Try.of(() -> {
+            throw new OutOfMemoryError();
+        }));
+        assertThrows(LinkageError.class, () -> Try.of(() -> {
+            throw new LinkageError();
+        }));
         assertErrorOf(NumberFormatException.class, Try.of(() -> Integer.parseInt("foo")));
         assertSuccess(1, Try.of(() -> Integer.parseInt("1")));
     }
 
     @Test
     void function() {
-        assertThrows(VirtualMachineError.class, () -> Try.function(__ -> { throw new OutOfMemoryError(); }).apply(1));
-        assertThrows(LinkageError.class, () -> Try.function(__ -> { throw new LinkageError(); }).apply(1));
+        assertThrows(VirtualMachineError.class, () -> Try.function(__ -> {
+            throw new OutOfMemoryError();
+        }).apply(1));
+        assertThrows(LinkageError.class, () -> Try.function(__ -> {
+            throw new LinkageError();
+        }).apply(1));
         assertErrorOf(NumberFormatException.class, Try.<String, Integer>function(Integer::parseInt).apply("foo"));
         assertSuccess(1, Try.<String, Integer>function(Integer::parseInt).apply("1"));
     }
@@ -69,7 +80,7 @@ class TryTest {
 
     @Test
     void mapFailure() {
-        assertErrorOf(NoSuchElementException.class, new Failure<>( new IllegalStateException() ).mapFailure(NoSuchElementException::new));
+        assertErrorOf(NoSuchElementException.class, new Failure<>(new IllegalStateException()).mapFailure(NoSuchElementException::new));
         assertSuccess(1, new Success<Integer>(1).mapFailure(NoSuchElementException::new));
     }
 
@@ -96,7 +107,9 @@ class TryTest {
         AtomicInteger test = new AtomicInteger(0);
         new Success<>(1).execute(test::set);
         assertEquals(1, test.get());
-        assertErrorOf(IllegalStateException.class, new Success<>(1).execute(__ -> { throw new IllegalStateException(); }));
+        assertErrorOf(IllegalStateException.class, new Success<>(1).execute(__ -> {
+            throw new IllegalStateException();
+        }));
     }
 
     @Test
@@ -152,17 +165,31 @@ class TryTest {
         assertEquals(new Right<>(1), new Success<>(1).toEither());
     }
 
-    <T> void assertErrorOf(Class<? extends Throwable> clazz, Try<T> value ) {
+    <T> void assertErrorOf(Class<? extends Throwable> clazz, Try<T> value) {
         switch (value) {
-            case Failure(var e) when clazz.isInstance(e) -> {}
+            case Failure(var e) when clazz.isInstance(e) -> {
+            }
             default -> fail("%s does not represent %s".formatted(value, clazz));
         }
     }
 
     <T> void assertSuccess(T expected, Try<T> actual) {
         switch (actual) {
-            case Success(var v) -> {}
+            case Success(var v) -> {
+            }
             default -> fail("Operation failed with %s".formatted(actual));
         }
+    }
+
+    @Test
+    void collector() {
+        final var result = Stream.of("1", "2", "3")
+                .map(Try.function(Integer::parseInt))
+                .collect(Try.collector(Collectors.toList()));
+        assertSuccess(List.of(1, 2, 3), result);
+        final var result2 = Stream.of("1", "foo", "2", "bar", "3")
+                .map(Try.function(Integer::parseInt))
+                .collect(Try.collector(Collectors.toList()));
+        assertErrorOf(NumberFormatException.class, result2);
     }
 }

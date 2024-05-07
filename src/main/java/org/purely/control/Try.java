@@ -4,14 +4,11 @@ import org.purely.annotations.Pure;
 import org.purely.functions.ThrowingConsumer;
 import org.purely.functions.ThrowingFunction;
 import org.purely.functions.ThrowingSupplier;
+import org.purely.internal.MutableRef;
 
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.Collector;
 
 /**
  * Try can be thought of as a specialization for {@link Either}, where the {@link org.purely.control.Either.Left} is
@@ -60,14 +57,64 @@ public sealed interface Try<T> {
     /**
      * Converts an {@link Either} where the left case is a {@link Throwable} and the right case is some value into
      * a {@link Try}.
+     *
      * @param either The either to convert.
+     * @param <T>    The value contained by the {@link org.purely.control.Either.Right}.
      * @return A new {@link Try} from the {@link Either}.
-     * @param <T> The value contained by the {@link org.purely.control.Either.Right}.
      */
     static <T> Try<T> fromEither(Either<? extends Throwable, ? extends T> either) {
         return switch (either) {
             case Either.Left(var e) -> new Failure<>(e);
             case Either.Right(var v) -> new Success<>(v);
+        };
+    }
+
+
+    /**
+     * Takes a downstream collector, and uses it to collect a {@link java.util.stream.Stream} of {@link Try}s
+     * to a result. If any {@link Failure} is encountered, that {@link Failure} will be returned. Otherwise, the
+     * result of the downstream collector will be returned as a {@link Success}.
+     * @param downstream The downstream collector.
+     * @return Either the first {@link Failure} encountered, or a {@link Success} of the result of the collector.
+     * @param <T> The type contained by the {@link Try}s
+     * @param <A> Intermediate type of the downstream collector.
+     * @param <R> The result type of the collector.
+     */
+    static <T, A, R> Collector<Try<T>, ?, Try<R>> collector(Collector<T, A, R> downstream) {
+        return new Collector<Try<T>, MutableRef<Try<A>>, Try<R>>() {
+            @Override
+            public Supplier<MutableRef<Try<A>>> supplier() {
+                return () -> new MutableRef<>(new Success<>(downstream.supplier().get()));
+            }
+
+            @Override
+            public BiConsumer<MutableRef<Try<A>>, Try<T>> accumulator() {
+                return (acc, elem) -> {
+                    acc.value = acc.value.flatMap(a -> elem.map(e -> {
+                        downstream.accumulator().accept(a, e);
+                        return a;
+                    }));
+                };
+            }
+
+            @Override
+            public BinaryOperator<MutableRef<Try<A>>> combiner() {
+                return (acc1, acc2) -> new MutableRef<>(
+                        acc1.value.flatMap(a1 -> acc2.value.map(a2 -> downstream.combiner().apply(a1, a2)))
+                );
+            }
+
+            @Override
+            public Function<MutableRef<Try<A>>, Try<R>> finisher() {
+                return acc -> acc.value.map(ThrowingFunction.wrap(downstream.finisher()));
+            }
+
+            @Override
+            public Set<Characteristics> characteristics() {
+                final var characteristics = new HashSet<>(downstream.characteristics());
+                characteristics.remove(Characteristics.IDENTITY_FINISH);
+                return characteristics;
+            }
         };
     }
 
@@ -327,6 +374,7 @@ public sealed interface Try<T> {
     /**
      * Converts a {@link Try} to an {@link Either}, where the {@link org.purely.control.Either.Left} maps to the
      * {@link Failure} case and the {@link org.purely.control.Either.Right} maps to the success case.
+     *
      * @return a new {@link Either}.
      */
     default Either<Throwable, T> toEither() {
@@ -338,8 +386,9 @@ public sealed interface Try<T> {
 
     /**
      * Represents the success condition of an operation that may respond with an error.
+     *
      * @param value The return value of the operation.
-     * @param <T> The type of the return value.
+     * @param <T>   The type of the return value.
      */
     @Pure
     record Success<T>(T value) implements Try<T> {
@@ -350,8 +399,9 @@ public sealed interface Try<T> {
 
     /**
      * Represents the failure condition of an operation that may respond with an error.
+     *
      * @param throwable The return value of the operation.
-     * @param <T> The type of the return value.
+     * @param <T>       The type of the return value.
      */
     @Pure
     record Failure<T>(Throwable throwable) implements Try<T> {
