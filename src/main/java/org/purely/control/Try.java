@@ -58,6 +58,20 @@ public sealed interface Try<T> {
     }
 
     /**
+     * Converts an {@link Either} where the left case is a {@link Throwable} and the right case is some value into
+     * a {@link Try}.
+     * @param either The either to convert.
+     * @return A new {@link Try} from the {@link Either}.
+     * @param <T> The value contained by the {@link org.purely.control.Either.Right}.
+     */
+    static <T> Try<T> fromEither(Either<? extends Throwable, ? extends T> either) {
+        return switch (either) {
+            case Either.Left(var e) -> new Failure<>(e);
+            case Either.Right(var v) -> new Success<>(v);
+        };
+    }
+
+    /**
      * Tests whether the {@link Try} is a {@link Success}.
      *
      * @return true if the {@link Try} is a {@link Success}, otherwise false.
@@ -308,6 +322,18 @@ public sealed interface Try<T> {
             default -> {
             }
         }
+    }
+
+    /**
+     * Converts a {@link Try} to an {@link Either}, where the {@link org.purely.control.Either.Left} maps to the
+     * {@link Failure} case and the {@link org.purely.control.Either.Right} maps to the success case.
+     * @return a new {@link Either}.
+     */
+    default Either<Throwable, T> toEither() {
+        return switch (this) {
+            case Success(T v) -> new Either.Right<>(v);
+            case Failure(var e) -> new Either.Left<>(e);
+        };
     }
 
     /**
