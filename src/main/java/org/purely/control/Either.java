@@ -1,5 +1,7 @@
 package org.purely.control;
 
+import org.purely.annotations.Pure;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -19,6 +21,7 @@ import java.util.stream.Stream;
  * @param <L> The type represented by {@link Left}
  * @param <R> The type represented by {@link Right}
  */
+@Pure
 public sealed interface Either<L, R> {
     /**
      * Tests whether the value represented by the Either is the left value.
@@ -258,6 +261,7 @@ public sealed interface Either<L, R> {
      * @param <L>
      * @param <R>
      */
+    @Pure
     record Left<L, R>(L value) implements Either<L, R> {
         @SuppressWarnings("unchecked")
         private <R2> Either<L, R2> coerce() {
@@ -265,17 +269,11 @@ public sealed interface Either<L, R> {
         }
     }
 
+    @Pure
     record Right<L, R>(R value) implements Either<L, R> {
         @SuppressWarnings("unchecked")
         private <L2> Either<L2, R> coerce() {
             return (Either<L2, R>) this;
         }
-    }
-}
-
-interface Internal {
-    @SuppressWarnings("unchecked")
-    static <L, R> Either<L, R> narrow(Either<? extends L, ? extends R> either) {
-        return (Either<L, R>)either;
     }
 }
