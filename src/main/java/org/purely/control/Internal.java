@@ -27,4 +27,9 @@ final class Internal {
             default -> t;
         };
     }
+
+    @SuppressWarnings({"ThrowableNotThrown", "ResultOfMethodCallIgnored"})
+    static void throwIfFatalNoReturn(Throwable t) {
+        throwIfFatal(t);
+    }
 }
