@@ -27,10 +27,10 @@ import java.util.stream.Collector;
 @Pure
 public sealed interface Try<T> {
     /**
-     * Runs the given supplier that may throw an exception, and responds with a {@link Try> wrapping the output.
+     * Runs the given supplier that may throw an exception, and responds with a {@link Try} wrapping the output.
      *
      * @param supplier The supplier to run.
-     * @param <T>
+     * @param <T>      The type returned by the wrapped supplier.
      * @return a {@link Success} if the operation returned successfully, or a {@link Failure} containing a {@link Throwable} if it failed.
      */
     static <T> Try<T> of(ThrowingSupplier<T> supplier) {
@@ -74,11 +74,12 @@ public sealed interface Try<T> {
      * Takes a downstream collector, and uses it to collect a {@link java.util.stream.Stream} of {@link Try}s
      * to a result. If any {@link Failure} is encountered, that {@link Failure} will be returned. Otherwise, the
      * result of the downstream collector will be returned as a {@link Success}.
+     *
      * @param downstream The downstream collector.
+     * @param <T>        The type contained by the {@link Try}s
+     * @param <A>        Intermediate type of the downstream collector.
+     * @param <R>        The result type of the collector.
      * @return Either the first {@link Failure} encountered, or a {@link Success} of the result of the collector.
-     * @param <T> The type contained by the {@link Try}s
-     * @param <A> Intermediate type of the downstream collector.
-     * @param <R> The result type of the collector.
      */
     static <T, A, R> Collector<Try<T>, ?, Try<R>> collector(Collector<T, A, R> downstream) {
         return new Collector<Try<T>, MutableRef<Try<A>>, Try<R>>() {
@@ -89,12 +90,10 @@ public sealed interface Try<T> {
 
             @Override
             public BiConsumer<MutableRef<Try<A>>, Try<T>> accumulator() {
-                return (acc, elem) -> {
-                    acc.value = acc.value.flatMap(a -> elem.map(e -> {
-                        downstream.accumulator().accept(a, e);
-                        return a;
-                    }));
-                };
+                return (acc, elem) -> acc.value = acc.value.flatMap(a -> elem.map(e -> {
+                    downstream.accumulator().accept(a, e);
+                    return a;
+                }));
             }
 
             @Override
