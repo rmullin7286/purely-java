@@ -90,22 +90,22 @@ public sealed interface Try<T> {
 
             @Override
             public BiConsumer<MutableRef<Try<A>>, Try<T>> accumulator() {
-                return (acc, elem) -> acc.value = acc.value.flatMap(a -> elem.map(e -> {
+                return (acc, elem) -> acc.update(i -> i.flatMap(a -> elem.map(e -> {
                     downstream.accumulator().accept(a, e);
                     return a;
-                }));
+                })));
             }
 
             @Override
             public BinaryOperator<MutableRef<Try<A>>> combiner() {
                 return (acc1, acc2) -> new MutableRef<>(
-                        acc1.value.flatMap(a1 -> acc2.value.map(a2 -> downstream.combiner().apply(a1, a2)))
+                        acc1.get().flatMap(a1 -> acc2.get().map(a2 -> downstream.combiner().apply(a1, a2)))
                 );
             }
 
             @Override
             public Function<MutableRef<Try<A>>, Try<R>> finisher() {
-                return acc -> acc.value.map(ThrowingFunction.wrap(downstream.finisher()));
+                return acc -> acc.get().map(ThrowingFunction.wrap(downstream.finisher()));
             }
 
             @Override
