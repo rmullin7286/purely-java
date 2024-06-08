@@ -2,6 +2,7 @@ package org.purely.collections;
 
 import org.purely.Tuple;
 import org.purely.Tuple.Tuple2;
+import org.purely.annotations.Pure;
 import org.purely.collections.views.PureLinkedListView;
 
 import java.util.*;
@@ -41,6 +42,7 @@ import java.util.stream.Collectors;
  *
  * @param <T> The type contained by the {@link PureLinkedList}
  */
+@Pure
 public sealed interface PureLinkedList<T> extends PureList<T> {
     static <T> PureLinkedList<T> from(Iterable<T> it) {
         if (it instanceof PureLinkedListView<T> v) {
@@ -462,6 +464,7 @@ public sealed interface PureLinkedList<T> extends PureList<T> {
 
     }
 
+    @Pure
     record Cons<T>(T head, PureLinkedList<T> tail) implements PureLinkedList<T> {
         public Cons {
             Objects.requireNonNull(head, "head cannot be null");
@@ -474,6 +477,7 @@ public sealed interface PureLinkedList<T> extends PureList<T> {
         }
     }
 
+    @Pure
     final class Nil<T> implements PureLinkedList<T> {
         private static final Nil<?> INSTANCE = new Nil<>();
 

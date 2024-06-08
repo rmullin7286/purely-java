@@ -1,6 +1,7 @@
 package org.purely.collections;
 
 import org.purely.Tuple.Tuple2;
+import org.purely.annotations.Pure;
 
 import java.util.ListIterator;
 import java.util.Optional;
@@ -8,6 +9,7 @@ import java.util.Optional;
 /**
  * The persistent analogue to {@link java.util.List} in the {@link PureCollection} hierarchy.
  */
+@Pure
 public interface PureList<T> extends PureSequencedCollection<T> {
     Optional<? extends PureList<T>> addAll(int index, Iterable<? extends T> element);
 
