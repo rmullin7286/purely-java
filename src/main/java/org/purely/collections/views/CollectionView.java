@@ -98,4 +98,8 @@ public abstract class CollectionView<T, C extends PureCollection<T>> implements 
     public void clear() {
         delegate.update(d -> (C) d.clear());
     }
+
+    public C toPure() {
+        return delegate.get();
+    }
 }

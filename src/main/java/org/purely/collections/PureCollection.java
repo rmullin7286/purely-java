@@ -29,7 +29,6 @@ import java.util.stream.StreamSupport;
  */
 @Pure
 public interface PureCollection<T> extends Iterable<T> {
-
     /**
      * Converts this PureCollection into a {@link Collection}, implementing all mutability methods fully.
      * This method is guaranteed to be O(1) in time.

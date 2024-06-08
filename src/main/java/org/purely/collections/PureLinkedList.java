@@ -2,6 +2,7 @@ package org.purely.collections;
 
 import org.purely.Tuple;
 import org.purely.Tuple.Tuple2;
+import org.purely.collections.views.PureLinkedListView;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,6 +42,26 @@ import java.util.stream.Collectors;
  * @param <T> The type contained by the {@link PureLinkedList}
  */
 public sealed interface PureLinkedList<T> extends PureList<T> {
+    static <T> PureLinkedList<T> from(Iterable<T> it) {
+        if (it instanceof PureLinkedListView<T> v) {
+            return v.toPure();
+        }
+
+        PureLinkedList<T> ret = PureLinkedList.empty();
+        for (T t : it) {
+            ret = ret.addFirst(t);
+        }
+        return ret.reversed();
+    }
+
+    static <T> PureLinkedList<T> of(T... values) {
+        PureLinkedList<T> ret = PureLinkedList.empty();
+        for (int i = 0; i < values.length; i++) {
+            ret = ret.addFirst(values[i]);
+        }
+        return ret;
+    }
+
     /**
      * {@inheritDoc}
      * <p>
