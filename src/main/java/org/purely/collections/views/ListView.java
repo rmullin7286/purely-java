@@ -22,24 +22,24 @@ public abstract class ListView<T, C extends PureList<T>> extends SequencedCollec
 
     @Override
     public T get(int index) {
-        return delegate.get().get(index).orElseThrow(IndexOutOfBoundsException::new);
+        return delegate.get().get(index);
     }
 
     @Override
     public T set(int index, T element) {
-        var result = delegate.get().set(index, element).orElseThrow(IndexOutOfBoundsException::new);
+        var result = delegate.get().getAndSet(index, element);
         delegate.set((C) result.second());
         return result.first();
     }
 
     @Override
     public void add(int index, T element) {
-        delegate.update(i -> (C) i.add(index, element).orElseThrow(IndexOutOfBoundsException::new));
+        delegate.update(i -> (C) i.add(index, element));
     }
 
     @Override
     public T remove(int index) {
-        var result = delegate.get().remove(index).orElseThrow(IndexOutOfBoundsException::new);
+        var result = delegate.get().removeAndGet(index);
         delegate.set((C) result.second());
         return result.first();
     }

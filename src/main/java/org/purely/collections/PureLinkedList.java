@@ -298,7 +298,12 @@ public sealed interface PureLinkedList<T> extends PureList<T> {
     }
 
     @Override
-    default Optional<PureLinkedList<T>> addAll(int index, Iterable<? extends T> element) {
+    default PureLinkedList<T> addAll(int index, Iterable<? extends T> elements) {
+        return addAllOptional(index, elements).orElseThrow(() -> new IndexOutOfBoundsException("addAll() called with out of bounds index"));
+    }
+
+    @Override
+    default Optional<PureLinkedList<T>> addAllOptional(int index, Iterable<? extends T> element) {
         PureLinkedList<T> front = PureLinkedList.empty();
         PureLinkedList<T> rear = this;
         var curIdx = index;
@@ -321,7 +326,12 @@ public sealed interface PureLinkedList<T> extends PureList<T> {
     }
 
     @Override
-    default Optional<T> get(int index) {
+    default T get(int index) {
+        return getOptional(index).orElseThrow(() -> new IndexOutOfBoundsException("get() called with out of bounds index"));
+    }
+
+    @Override
+    default Optional<T> getOptional(int index) {
         var curIdx = index;
         for (T t : this) {
             if (curIdx == 0) {
@@ -334,7 +344,24 @@ public sealed interface PureLinkedList<T> extends PureList<T> {
     }
 
     @Override
-    default Optional<Tuple2<T, PureLinkedList<T>>> set(int index, T element) {
+    default PureLinkedList<T> set(int index, T element) {
+        return getAndSetOptional(index, element).map(Tuple2::second)
+                .orElseThrow(() -> new IndexOutOfBoundsException("set() called with out of bounds index"));
+    }
+
+    @Override
+    default Optional<PureLinkedList<T>> setOptional(int index, T element) {
+        return getAndSetOptional(index, element).map(Tuple2::second);
+    }
+
+    @Override
+    default Tuple2<T, PureLinkedList<T>> getAndSet(int index, T element) {
+        return getAndSetOptional(index, element)
+                .orElseThrow(() -> new IndexOutOfBoundsException("getAndSet() called with out of bounds index"));
+    }
+
+    @Override
+    default Optional<Tuple2<T, PureLinkedList<T>>> getAndSetOptional(int index, T element) {
         PureLinkedList<T> front = PureLinkedList.empty();
         PureLinkedList<T> rear = this;
         var curIdx = index;
@@ -357,7 +384,13 @@ public sealed interface PureLinkedList<T> extends PureList<T> {
     }
 
     @Override
-    default Optional<PureLinkedList<T>> add(int index, T value) {
+    default PureLinkedList<T> add(int index, T value) {
+        return addOptional(index, value)
+                .orElseThrow(() -> new IndexOutOfBoundsException("add() called with out of bounds index"));
+    }
+
+    @Override
+    default Optional<PureLinkedList<T>> addOptional(int index, T value) {
         PureLinkedList<T> front = PureLinkedList.empty();
         PureLinkedList<T> rear = this;
         int curIdx = index;
@@ -377,7 +410,24 @@ public sealed interface PureLinkedList<T> extends PureList<T> {
     }
 
     @Override
-    default Optional<Tuple2<T, PureLinkedList<T>>> remove(int index) {
+    default PureList<T> remove(int index) {
+        return removeOptional(index)
+                .orElseThrow(() -> new IndexOutOfBoundsException("remove() called with out of bounds index"));
+    }
+
+    @Override
+    default Optional<PureLinkedList<T>> removeOptional(int index) {
+        return removeAndGetOptional(index).map(Tuple2::second);
+    }
+
+    @Override
+    default Tuple2<T, PureLinkedList<T>> removeAndGet(int index) {
+        return removeAndGetOptional(index)
+                .orElseThrow(() -> new IndexOutOfBoundsException("removeAndGet() called with out of bounds index"));
+    }
+
+    @Override
+    default Optional<Tuple2<T, PureLinkedList<T>>> removeAndGetOptional(int index) {
         PureLinkedList<T> front = PureLinkedList.empty();
         PureLinkedList<T> rear = this;
         var curIdx = index;
