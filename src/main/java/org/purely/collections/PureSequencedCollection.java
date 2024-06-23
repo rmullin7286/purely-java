@@ -49,7 +49,21 @@ public interface PureSequencedCollection<T> extends PureCollection<T> {
      */
     Optional<T> getLast();
 
-    Optional<? extends Tuple2<T, ? extends PureSequencedCollection<T>>> removeFirst();
+    PureSequencedCollection<T> removeFirst();
 
-    Optional<? extends Tuple2<T, ? extends PureSequencedCollection<T>>> removeLast();
+    Optional<? extends PureSequencedCollection<T>> removeFirstOptional();
+
+    Tuple2<T, ? extends PureSequencedCollection<T>> getAndRemoveFirst();
+
+    Optional<? extends Tuple2<T, ? extends PureSequencedCollection<T>>> getAndRemoveFirstOptional();
+
+    PureSequencedCollection<T> removeLast();
+
+    Optional<? extends PureSequencedCollection<T>> removeLastOptional();
+
+    Tuple2<T, ? extends PureSequencedCollection<T>> getAndRemoveLast();
+
+    Optional<? extends Tuple2<T, ? extends PureSequencedCollection<T>>> getAndRemoveLastOptional();
+
+
 }

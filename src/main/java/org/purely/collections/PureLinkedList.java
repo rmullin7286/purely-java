@@ -61,7 +61,7 @@ public sealed interface PureLinkedList<T> extends PureList<T> {
         for (int i = 0; i < values.length; i++) {
             ret = ret.addFirst(values[i]);
         }
-        return ret;
+        return ret.reversed();
     }
 
     /**
@@ -143,7 +143,7 @@ public sealed interface PureLinkedList<T> extends PureList<T> {
 
     @Override
     default List<T> toMutable() {
-        throw new UnsupportedOperationException("TODO");
+        return new PureLinkedListView<>(this);
     }
 
     /**
@@ -285,7 +285,25 @@ public sealed interface PureLinkedList<T> extends PureList<T> {
     }
 
     @Override
-    default Optional<Tuple2<T, PureLinkedList<T>>> removeFirst() {
+    default PureLinkedList<T> removeFirst() {
+        return removeFirstOptional()
+                .orElseThrow();
+    }
+
+    @Override
+    default Optional<? extends PureLinkedList<T>> removeFirstOptional() {
+        return getAndRemoveFirstOptional()
+                .map(Tuple2::second);
+    }
+
+    @Override
+    default Tuple2<T, ? extends PureLinkedList<T>> getAndRemoveFirst() {
+        return getAndRemoveFirstOptional()
+                .orElseThrow();
+    }
+
+    @Override
+    default Optional<Tuple2<T,PureLinkedList<T>>> getAndRemoveFirstOptional() {
         return switch (this) {
             case Cons(var head, var tail) -> Optional.of(Tuple.of(head, tail));
             default -> Optional.empty();
@@ -293,8 +311,24 @@ public sealed interface PureLinkedList<T> extends PureList<T> {
     }
 
     @Override
-    default Optional<Tuple2<T, PureLinkedList<T>>> removeLast() {
-        return this.reversed().removeFirst().map(i -> Tuple.of(i.first(), i.second().reversed()));
+    default PureLinkedList<T> removeLast() {
+        return reversed().removeFirst().reversed();
+    }
+
+    @Override
+    default Optional<? extends PureLinkedList<T>> removeLastOptional() {
+        return reversed().removeFirstOptional().map(PureLinkedList::reversed);
+    }
+
+    @Override
+    default Tuple2<T, ? extends PureLinkedList<T>> getAndRemoveLast() {
+        var x = reversed().getAndRemoveLast();
+        return Tuple.of(x.first(), x.second().reversed());
+    }
+
+    @Override
+    default Optional<Tuple2<T, ? extends PureLinkedList<T>>> getAndRemoveLastOptional() {
+        return reversed().getAndRemoveLastOptional().map(i -> Tuple.of(i.first(), i.second().reversed()));
     }
 
     @Override

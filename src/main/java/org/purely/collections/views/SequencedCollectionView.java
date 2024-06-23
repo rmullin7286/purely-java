@@ -34,20 +34,16 @@ public abstract class SequencedCollectionView<T, C extends PureSequencedCollecti
     @SuppressWarnings("unchecked")
     @Override
     public T removeFirst() {
-        return delegate.get().removeFirst()
-                .map(i -> {
-                    delegate.set((C) i.second());
-                    return i.first();
-                }).orElseThrow();
+        var ret = delegate.get().getAndRemoveFirst();
+        delegate.set((C)ret.second());
+        return ret.first();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public T removeLast() {
-        return delegate.get().removeLast()
-                .map(i -> {
-                    delegate.set((C) i.second());
-                    return i.first();
-                }).orElseThrow();
+        var ret = delegate.get().getAndRemoveLast();
+        delegate.set((C)ret.second());
+        return ret.first();
     }
 }
